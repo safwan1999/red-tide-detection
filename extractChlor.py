@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import spatial
 
-file_path = 'modis-chlor/A2018057185000.L2_LAC_OC.nc'
+file_path = 'modis-chlor/A2020040184500.L2_LAC_OC.nc'
 # Lat + long of bounding box of the study area (NW corner and SE corner)
 latNW = 27.117033
 longNW = -82.513229
@@ -50,6 +50,24 @@ dataset = xr.open_dataset(file_path, 'geophysical_data')
 
 chlor_a = dataset['chlor_a']
 chl_ocx = dataset['chl_ocx']
+nflh = dataset['nflh']
+RRS_443 = dataset['Rrs_443']
+RRS_555 = dataset['Rrs_555']
+
+#QAA to derive b_bp from Lee et al. 2002
+rrs_443 = RRS_443/(0.52 + 1.7*RRS_443)
+rrs_555 = RRS_555/(0.52 + 1.7*RRS_555)
+
+g_0 = 0.0895
+g_1 = 0.1247
+#from Pope and Fry, 1997
+bbw_555 = 0.0596
+u_555 = (-g_0 + np.sqrt(g_0**2 + 4*g_1*rrs_555))/(2*g_1)
+rho = np.log(rrs_443/rrs_555)
+a_440_i = np.exp(-2.0 - 1.4*rho + 0.2*(rho**2))
+a_555 = 0.0596 + 0.2*(a_440_i - 0.01)
+bbp_555_QAA = ((u_555*a_555)/(1-u_555)) - bbw_555
+bbp_555_MOREL = 0.3*(chl_ocx**0.62)*(0.002 + 0.02*(0.5-0.25*np.log10(chl_ocx)))
 
 plt.figure()
 plt.imshow(chlor_a[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]], vmin=0.001, vmax=15)
@@ -63,6 +81,36 @@ plt.imshow(chl_ocx[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW
 plt.gca().invert_xaxis()
 plt.gca().invert_yaxis()
 plt.title(collectionDate + ' Chlorophyll Concentration, OC3 Algorithm')
+plt.colorbar()
+
+plt.figure()
+plt.imshow(nflh[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Normalized Fluorescence Line Height')
+plt.colorbar()
+
+plt.figure()
+plt.imshow(bbp_555_QAA[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]]/bbp_555_MOREL[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Particle Backscatter Ratio')
+plt.clim(-1, 1)
+plt.colorbar()
+
+plt.figure()
+plt.imshow(bbp_555_QAA[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Particle Backscatter at 555 nm from QAA')
+plt.clim(-0.05, 0.05)
+plt.colorbar()
+
+plt.figure()
+plt.imshow(bbp_555_MOREL[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Particle Backscatter at 555 nm from MOREL')
 plt.colorbar()
 
 plt.show()
