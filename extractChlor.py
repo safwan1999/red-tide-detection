@@ -60,14 +60,24 @@ rrs_555 = RRS_555/(0.52 + 1.7*RRS_555)
 
 g_0 = 0.0895
 g_1 = 0.1247
-#from Pope and Fry, 1997
-bbw_555 = 0.0596
+#from Lin and Lee, 2018
+bbw_555 = 0.001
 u_555 = (-g_0 + np.sqrt(g_0**2 + 4*g_1*rrs_555))/(2*g_1)
 rho = np.log(rrs_443/rrs_555)
 a_440_i = np.exp(-2.0 - 1.4*rho + 0.2*(rho**2))
 a_555 = 0.0596 + 0.2*(a_440_i - 0.01)
+bb_555 = ((u_555*a_555)/(1-u_555))
 bbp_555_QAA = ((u_555*a_555)/(1-u_555)) - bbw_555
 bbp_555_MOREL = 0.3*(chl_ocx**0.62)*(0.002 + 0.02*(0.5-0.25*np.log10(chl_ocx)))
+
+bbp_555_ratio = bbp_555_QAA/bbp_555_MOREL
+
+red_tide = np.zeros_like(u_555)
+#red_tide_inds = np.where(chl_ocx>1.5 and nflh>0.01 and bbp_555_ratio<1)[0]
+red_tide_inds = np.where((chl_ocx>1.5) & (nflh>0.01) & (bbp_555_ratio<1))
+mask_inds = np.isnan(chl_ocx)
+red_tide[mask_inds] = -1
+red_tide[red_tide_inds[0], red_tide_inds[1]] = 1
 
 plt.figure()
 plt.imshow(chlor_a[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]], vmin=0.001, vmax=15)
@@ -91,7 +101,7 @@ plt.title(collectionDate + ' Normalized Fluorescence Line Height')
 plt.colorbar()
 
 plt.figure()
-plt.imshow(bbp_555_QAA[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]]/bbp_555_MOREL[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.imshow(bbp_555_ratio[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
 plt.gca().invert_xaxis()
 plt.gca().invert_yaxis()
 plt.title(collectionDate + ' Particle Backscatter Ratio')
@@ -111,6 +121,21 @@ plt.imshow(bbp_555_MOREL[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_i
 plt.gca().invert_xaxis()
 plt.gca().invert_yaxis()
 plt.title(collectionDate + ' Particle Backscatter at 555 nm from MOREL')
+plt.colorbar()
+
+plt.figure()
+plt.imshow(bb_555[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Total Backscatter at 555 nm')
+plt.clim(0, 0.2)
+plt.colorbar()
+
+plt.figure()
+plt.imshow(red_tide[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+plt.title(collectionDate + ' Red Tide')
 plt.colorbar()
 
 plt.show()
