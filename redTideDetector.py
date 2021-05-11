@@ -5,17 +5,17 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import spatial
+from findBoundBoxCoords import *
+from utils import *
 
-def ensure_folder(folder):
-	if not os.path.isdir(folder):
-		os.mkdir(folder)
-
-data_folder = 'modis-chlor'
+data_folder = 'modis-data'
 output_folder = 'red_tide_plots'
 data_list = os.listdir(data_folder)
 
 ensure_folder(output_folder)
 
+plotcounter = 1
+print('Creating plots...')
 for i in range(len(data_list)):
 	file_id = data_list[i]
 	file_path = data_folder + '/' + file_id
@@ -26,41 +26,9 @@ for i in range(len(data_list)):
 	latSE = 26.358022
 	longSE = -81.693427
 
-	fh = netCDF4.Dataset(file_path, mode='r')
-	#print(fh)
-	collectionDate = fh.time_coverage_start[0:10]
-
-	nav_dataset = xr.open_dataset(file_path, 'navigation_data')
-
-	#print(nav_dataset)
-
-	latitude = nav_dataset['latitude']
-	longitude = nav_dataset['longitude']
-
-	# plot a sub-grid
-	#slat = np.array([arr[::100] for arr in latitude[::100]]).flatten()
-	#slon = np.array([arr[::100] for arr in longitude[::100]]).flatten()
-	#plt.scatter(slat, slon)
-	#plt.show()
-	latarr = np.array(latitude).flatten()
-	longarr = np.array(longitude).flatten()
-	latarr = np.expand_dims(latarr, axis=1)
-	longarr = np.expand_dims(longarr, axis=1)
-
-	points = np.concatenate([latarr, longarr], axis=1)
-	pointNW = [latNW, longNW]
-	latlongKDTree = spatial.KDTree(points)
-	distance,index = latlongKDTree.query(pointNW)
-	orig_indexNW = np.unravel_index(index, latitude.shape)
-	pointSE = [latSE, longSE]
-	distance,index = latlongKDTree.query(pointSE)
-	orig_indexSE = np.unravel_index(index, latitude.shape)
+	collectionDate, orig_indexSE, orig_indexNW = findBoundBoxCoords(file_path, latNW, longNW, latSE, longSE)
 
 	dataset = xr.open_dataset(file_path, 'geophysical_data')
-
-	#print(dataset)
-	#print('')
-	#print(dataset.variables)
 
 	chlor_a = dataset['chlor_a']
 	chl_ocx = dataset['chl_ocx']
@@ -150,6 +118,11 @@ for i in range(len(data_list)):
 	plt.gca().invert_xaxis()
 	plt.gca().invert_yaxis()
 	plt.title(collectionDate + ' Red Tide')
+	plt.clim(-1, 1)
 	plt.colorbar()
-	plt.savefig(output_folder + '/' + collectionDate + '.png')
+	plt.savefig(output_folder + '/' + collectionDate + '_redtide.png', bbox_inches='tight')
 	plt.close()
+
+	plt.close('all')
+	print('Plot ' + str(plotcounter) + ' completed')
+	plotcounter = plotcounter + 1

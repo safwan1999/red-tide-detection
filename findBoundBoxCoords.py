@@ -5,9 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import spatial
 
-# Lat + long of bounding box of the study area (NW corner and SE corner)
+# Finds the nearest matrix coordinates corresponding to the
+# Lat and long of the bounding box defined by the NW corner and SE corner
 
-def getChl(file_path, latNW, longNW, latSE, longSE):
+def findBoundBoxCoords(file_path, latNW, longNW, latSE, longSE):
 	fh = netCDF4.Dataset(file_path, mode='r')
 	collectionDate = fh.time_coverage_start[0:10]
 
@@ -30,9 +31,4 @@ def getChl(file_path, latNW, longNW, latSE, longSE):
 	distance,index = latlongKDTree.query(pointSE)
 	orig_indexSE = np.unravel_index(index, latitude.shape)
 
-	dataset = xr.open_dataset(file_path, 'geophysical_data')
-
-	chlor_a = dataset['chlor_a']
-	chl_ocx = dataset['chl_ocx']
-
-	return collectionDate, chlor_a[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]], chl_ocx[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]]
+	return collectionDate, orig_indexSE, orig_indexNW
