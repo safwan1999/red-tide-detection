@@ -1,6 +1,6 @@
 # Red Tide Detection
 
-Implements the red tide detection algorithm outlined in the IOCCG report #20 (2021).
+Implements the red tide detection algorithm outlined in the IOCCG report #20 (2021): https://ioccg.org/wp-content/uploads/2021/05/ioccg_report_20-habs-2021-web.pdf.
 
 The code uses MODIS data (.nc files), available from: https://oceancolor.gsfc.nasa.gov/cgi/browse.pl?sen=amod
 
