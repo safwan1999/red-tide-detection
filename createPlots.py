@@ -35,7 +35,7 @@ for filename in filenames:
 	plt.gca().invert_yaxis()
 	plt.title(collectionDate + ' Chlorophyll Concentration, OCI Algorithm')
 	plt.colorbar()
-	plt.savefig(chlor_a_output + '/' + collectionDate + '_chlora.png')
+	plt.savefig(chlor_a_output + '/' + collectionDate + '_chlora.png', bbox_inches='tight')
 
 	plt.figure(dpi=500)
 	plt.imshow(chl_ocx[orig_indexSE[0]:orig_indexNW[0], orig_indexSE[1]:orig_indexNW[1]], vmin=0.001, vmax=25)
@@ -43,7 +43,7 @@ for filename in filenames:
 	plt.gca().invert_yaxis()
 	plt.title(collectionDate + ' Chlorophyll Concentration, OC3 Algorithm')
 	plt.colorbar()
-	plt.savefig(chlor_ocx_output + '/' + collectionDate + '_chlocx.png')
+	plt.savefig(chlor_ocx_output + '/' + collectionDate + '_chlocx.png', bbox_inches='tight')
 
 	plt.close('all')
 	print('Plot ' + str(plotcounter) + ' completed')
